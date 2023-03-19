@@ -16,7 +16,6 @@ const movieData = {
 
 app.get("/", HANDLER);
 function HANDLER(req, res) {
-
     res.json(movieData);
 
 }
