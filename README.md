@@ -5,12 +5,22 @@
 **Author Name**: LeeNa A.AlZaben
 
 ## WRRC
-![alt="WRRC diagram"](./wrrcdiagram.png)
-![alt="API"](./WRRC_API.jpg)
+![alt="WRRC diagram"](./assets/wrrcdiagram.png)
+![alt="API"](./assets/WRRC_API.jpg)
+![alt="DataBase"](./assets/WRRC_dB.jpg)
+
 ## Overview
 
 This project for create Page with two Endpoints the Home page ( with "/") and the other for
 ("/favorite") on Favorite Page with the GET request using the provided JSON data.
+Trending movies applications can have a variety of features, including the ability to search for movies, filter by genres or release date, create watchlists.
+And receive notifications when new movies are added to the trending list.
+<!-- Trending movies -->
+
+<!--  Search on movie -->
+
+<!-- create watchlists -->
+<!-- new trend list -->
 
 ## Getting Started
 <!-- What are the steps that a user must take in order to build this app on their own machine and get it running? -->
@@ -27,3 +37,4 @@ This project for create Page with two Endpoints the Home page ( with "/") and th
 2. Home page endpoint that returns a JSON object with movie data.
 3. Movie data is stored locally in the server.
 4. User interface to display movie data is not yet implemented.
+
