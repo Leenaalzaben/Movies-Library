@@ -5,8 +5,10 @@
 **Author Name**: LeeNa A.AlZaben
 
 ## WRRC
-![alt="WRRC diagram"](./wrrcdiagram.png)
-![alt="API"](./WRRC_API.jpg)
+![alt="WRRC diagram"](./assets/wrrcdiagram.png)
+![alt="API"](./assets/WRRC_API.jpg)
+![alt="DataBase"](./assets/WRRC_dB.jpg)
+
 ## Overview
 
 This project for create Page with two Endpoints the Home page ( with "/") and the other for
