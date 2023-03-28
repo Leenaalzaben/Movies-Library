@@ -1,27 +1,28 @@
 'use strict';
-// Create a basic server with a route that returns a response
-// express :is a framework 
 const express = require("express");
+const app = express();
+const MoviesData = require('./Movie Data/data.json');
 const cors = require('cors');
 const axios = require('axios');
 require('dotenv').config();
-const bodyParser = require('body-parser');
-const { Client } = require('pg')
 
-const MoviesData = require('./Movie Data/data.json');
+
+
 const { json } = require('express');
 const PORT = process.env.PORT;
 const apiKey = process.env.API_KEY;
 //postgres://username:password@localhost:5432/databasename
-let url =`postgres://leena:0000@localhost:5432/moviedb`;
-// const URL = process.env.url;
-const client = new Client(url)
-// notice to use all apps after declration ,where the app here is express which bulid the server
-const app = express();
+let url = process.env.url;
+
 app.use(cors());
+const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: false }));
-// parse application/json
 app.use(bodyParser.json());
+const { Client } = require('pg');
+const client = new Client(url);
+
+
+
 //Routes 
 app.get("/", homeHandler);
 app.get("/favorite", favoriteHandler);
@@ -29,15 +30,18 @@ app.get('/trending', trendingHandler);
 app.get("/search", searchHandler);
 app.get("/popular", popularHandler);
 app.get("/overview", overview);
+// Database  
 app.post("/addMovie", addMovieHandler);
-app.get("/getMovies",getMoviesHandeler);
-///getMovies
+app.get("/getMovies", getMoviesHandeler);
+app.put('/updateMovie/:id', updateHandler);
+app.delete('/deleteMovie/:movieId', deleteHandler);
+app.get("/specificMovie/:id", getSpecificMovieHandeler);
 app.get('*', HandlerNotFoundError);
 
 // functions
 //1. Home
 function homeHandler(req, res) {
-    let newData = new movieInfo(MoviesData.title, MoviesData.poster_path, MoviesData.overview);
+    let newData = new homePage(MoviesData.title, MoviesData.poster_path, MoviesData.overview);
     res.json(newData);
 
 }
@@ -66,12 +70,13 @@ function trendingHandler(req, res) {
 //4.search
 function searchHandler(req, res) {
     let clientQuery = req.query.title;
-    let url = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${clientQuery}&page=2`
-    axios.get(url)
+    let URL = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${clientQuery}&page=2`
+    axios.get(URL)
         .then((result) => {
             let searchDataMovies = result.data.results.map((Movie) => {
-                return new movieInfo(Movie.title, Movie.poster_path, Movie.overview);
-            })
+                return new searchMovie(Movie.id, Movie.title, Movie.release_date, Movie.poster_path, Movie.overview)
+
+            });
             res.json(searchDataMovies);
         })
         .catch((error) => {
@@ -103,7 +108,7 @@ function overview(req, res) {
     axios.get(url)
         .then(result => {
             let overView = result.data.results.map((Movie) => {
-                return new topShow(Movie.name, Movie.lang, Movie.overview, Movie.vote);
+                return new overViewMovie(Movie.name, Movie.lang, Movie.overview, Movie.vote);
             })
             res.json(overView);
 
@@ -118,40 +123,115 @@ function overview(req, res) {
 
 
 
-// POST Method
+// DATABASE Functions
 function addMovieHandler(req, res) {
-    // it should be save the data
-    console.log(req.body);
-    // save data inside variable use destructing way
-    let{title,poster_path,overview,release_date} = req.body;
-    let sql = `INSERT INTO MoviedB_table (title,poster_path,overview,release_date)
-    VALUES ($1,$2,$3,$4) RETURNING *; `
-    let values = [title,poster_path,overview,release_date]
-        // client.query(sql,values).then((result)=>{
-        res.status(201).send("data recived to the server successfully")
-        // res.status(201).json(values);
-        // )
-        // .catch((error) => {
-        //     console.log(error);
-        // })
+    let { moviename,  comment } = req.body;
+    let sql = `INSERT INTO moviet  (moviename,comment) VALUES ($1, $2) RETURNING *;`
+    let values = [moviename, comment];
+    console.log(values);
+    client.query(sql, values)
+        .then((result) => {
+            res.status(201).send("Data received by the server successfully");
+        })
+        .catch((error) => {
+            console.error(error);
+            res.status(500).send("Error while saving data to the server");
+        });
 }
-// get to return all data I saved in dB
-function getMoviesHandeler(req,res){
-    let sql =`SELECT * FROM MoviedB_table;`
-    // client.query(sql);
-    client.query(sql).then((result)=>{
-        console.log(sql);
-
-        res.json(result);
-    }).catch((error)=>{
-        errorHandler(error,req,res)
+function getMoviesHandeler(req, res) {
+    let sql = `SELECT * FROM moviet`;
+    //read all data from database table
+    client.query(sql).then((result) => {
+        console.log(result);
+        res.json(result.rows)
+    }).catch((error) => {
+        res.send(error)
     })
 
+}
+function updateHandler(req, res) {
+    // console.log(1111,req.params)
+    //new data i eant to update
 
+    let ID = req.params.id;
+    let {  moviename, comment } = req.body;
+    let sql = `UPDATE moviet SET  moviename = $1 ,comment=$2 
+      WHERE id = $3 RETURNING *;`;
+    let values = [ moviename, comment,ID];
+    client.query(sql, values).then(result => {
+        console.log(result.rows);
+        res.send(result.rows)
+    }).catch();
+}
+function deleteHandler(req, res) {
+    let { movieId } = req.params;
+    let sql = `DELETE FROM moviet WHERE id =$1;`;
+    let value = [movieId];
+    client.query(sql, value).then(result => {
+        res.status(204).send("deleted");
+    }).catch()
 
+}
+function getSpecificMovieHandeler(req, res) {
+
+    let id = req.params.id;
+    let values = [id];
+    let sql = `SELECT * FROM moviet WHERE id = $1`;
+    client.query(sql, values).then((result) => {
+        if (result.rows.length === 0) {
+            res.send('This movie dose not exist');
+        }
+        else {
+            res.json(result.rows);
+        }
+    }).catch()
 
 
 }
+
+
+
+
+
+
+
+// My constructor
+function homePage(title, poster_path, overview) {
+    this.title = title;
+    this.poster_path = poster_path;
+    this.overview = overview;
+
+};
+function trendMovie(id, title, release_date, poster_path, overview) {
+    this.id = id;
+    this.title = title;
+    this.release_date = release_date;
+    this.poster_path = poster_path;
+    this.overview = overview;
+
+}
+function searchMovie(id, title, release_date, poster_path, overview) {
+    this.id = id;
+    this.title = title;
+    this.release_date = release_date;
+    this.poster_path = poster_path;
+    this.overview = overview;
+
+};
+function popular(title, overview, release_date, vote) {
+    this.title = title;
+    this.overview = overview;
+    this.release_date = release_date;
+    this.vote = vote;
+};
+function overViewMovie(name, lang, overview, vote) {
+    this.name = name;
+    this.lang = lang;
+    this.overview = overview;
+    this.vote = vote;
+
+
+};
 
 
 //7. error found
@@ -167,35 +247,7 @@ app.use(function (error, req, res, next) {
 
 
 });
-// My constructor
-function movieInfo(title, poster_path, overview) {
-    this.title = title;
-    this.poster_path = poster_path;
-    this.overview = overview;
 
-};
-function trendMovie(id, title, release_date, poster_path, overview) {
-    this.id = id;
-    this.title = title;
-    this.release_date = release_date;
-    this.poster_path = poster_path;
-    this.overview = overview;
-
-}
-function popular(title, overview, release_date, vote) {
-    this.title = title;
-    this.overview = overview;
-    this.release_date = release_date;
-    this.vote = vote;
-};
-function topShow(name, lang, overview, vote) {
-    this.name = name;
-    this.lang = lang;
-    this.overview = overview;
-    this.vote = vote;
-
-
-}
 
 client.connect().then(() => {
     // Run server and make it listening all the time
