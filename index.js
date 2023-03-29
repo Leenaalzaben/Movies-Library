@@ -40,7 +40,7 @@ app.get('*', HandlerNotFoundError);
 
 // functions
 //1. Home
-function homeHandler(req, res) {
+function homeHandler(req,res) {
     let newData = new homePage(MoviesData.title, MoviesData.poster_path, MoviesData.overview);
     res.json(newData);
 
