@@ -40,7 +40,7 @@ app.get('*', HandlerNotFoundError);
 
 // functions
 //1. Home
-function homeHandler(req,res) {
+function homeHandler(req, res) {
     let newData = new homePage(MoviesData.title, MoviesData.poster_path, MoviesData.overview);
     res.json(newData);
 
@@ -62,8 +62,8 @@ function trendingHandler(req, res) {
             })
             res.json(trendDataMovies);
         })
-        .catch((error) => {
-            console.log(error);
+        .catch((err) => {
+            console.log(err);
         })
 
 }
@@ -79,8 +79,8 @@ function searchHandler(req, res) {
             });
             res.json(searchDataMovies);
         })
-        .catch((error) => {
-            console.log(error);
+        .catch((err) => {
+            console.log(err);
         })
 
 
@@ -96,8 +96,8 @@ function popularHandler(req, res) {
             res.json(popularMovies);
 
         })
-        .catch((error) => {
-            console.log(error);
+        .catch((err) => {
+            console.log(err);
         })
 
 }
@@ -113,8 +113,8 @@ function overview(req, res) {
             res.json(overView);
 
         })
-        .catch((error) => {
-            console.log(error);
+        .catch((err) => {
+            console.log(err);
         })
 
 
@@ -125,12 +125,14 @@ function overview(req, res) {
 
 // DATABASE Functions
 function addMovieHandler(req, res) {
-    let { moviename,  comment } = req.body;
-    let sql = `INSERT INTO moviet  (moviename,comment) VALUES ($1, $2) RETURNING *;`
-    let values = [moviename, comment];
+    let { moviename, comment, image } = req.body;
+    let sql = `INSERT INTO moviet  (moviename,comment,imageurl) VALUES ($1, $2,$3) RETURNING *;`
+    let values = [moviename, comment, image];
     console.log(values);
     client.query(sql, values)
         .then((result) => {
+            // res.status(201).json(data.rows);
+
             res.status(201).send("Data received by the server successfully");
         })
         .catch((error) => {
@@ -144,8 +146,8 @@ function getMoviesHandeler(req, res) {
     client.query(sql).then((result) => {
         console.log(result);
         res.json(result.rows)
-    }).catch((error) => {
-        res.send(error)
+    }).catch((err) => {
+        console.log(err);
     })
 
 }
@@ -154,14 +156,16 @@ function updateHandler(req, res) {
     //new data i eant to update
 
     let ID = req.params.id;
-    let {  moviename, comment } = req.body;
+    let { moviename, comment } = req.body;
     let sql = `UPDATE moviet SET  moviename = $1 ,comment=$2 
       WHERE id = $3 RETURNING *;`;
-    let values = [ moviename, comment,ID];
+    let values = [moviename, comment, ID];
     client.query(sql, values).then(result => {
         console.log(result.rows);
         res.send(result.rows)
-    }).catch();
+    }).catch(err => {
+        console.log(err);
+    });
 }
 function deleteHandler(req, res) {
     let { movieId } = req.params;
@@ -169,7 +173,9 @@ function deleteHandler(req, res) {
     let value = [movieId];
     client.query(sql, value).then(result => {
         res.status(204).send("deleted");
-    }).catch()
+    }).catch(err => {
+        console.log(err);
+    })
 
 }
 function getSpecificMovieHandeler(req, res) {
@@ -184,7 +190,9 @@ function getSpecificMovieHandeler(req, res) {
         else {
             res.json(result.rows);
         }
-    }).catch()
+    }).catch(err => {
+        console.log(err);
+    })
 
 
 }
