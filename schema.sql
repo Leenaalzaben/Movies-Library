@@ -2,6 +2,8 @@
   CREATE TABLE IF NOT EXISTS moviet (
   id SERIAL NOT NULL ,
   moviename VARCHAR(255),
+  imageURL  VARCHAR(255),
+
   comment VARCHAR(255),
    PRIMARY KEY (id)
 );
